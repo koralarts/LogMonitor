@@ -10,9 +10,8 @@
 # USER VARIABLES
 ##############################################
 BLOCK_TRIES="3"			# How many tries before blocking
-BLOCK_DELAY="2"			# The delay in seconds to determine blocking
-BLOCK_TIL="1d"			# The amount of time to block the IP
-OS="ubuntu"			# The current OS
+BLOCK_DELAY="10"		# The delay in seconds to determine blocking
+BLOCK_TIL="10"			# The amount of time to block the IP
 SERVICE="ssh"			# Port/Service to be checked
 PROTOCOL="tcp"			# Protocol the service will be on
 LOG_LOC="/var/log/auth.log"	# The location of the log file
@@ -22,7 +21,7 @@ LOG_LOC="/var/log/auth.log"	# The location of the log file
 ##############################################
 
 # SERVICE LOG REGEXP
-SSH=$OS" sshd\[[0-9]+\]: Failed password"
+SSH="sshd\[[0-9]+\]: Failed password"
 	
 # NORMAL VARIABLES
 TRIES=0
@@ -31,11 +30,22 @@ IFS=$'\n'
 #############################################
 # HELPER FUNCTIONS
 #############################################
+
+# ADDS A RULE TO THE IP TABLE
 function blockIP()
 {
 	iptables -A INPUT -s $@ -p $PROTOCOL --dport $SERVICE -j DROP
 }
 
+# REMOVES THE RULE FROM THE IP TABLE AFTER 10 DAYS
+function unblockIP()
+{
+	DATE=`date +"%M %k %d %m %u" --date="+$BLOCK_TIL days"`
+
+	(crontab -l; echo "$DATE /unblock.sh $SERVICE $IP_ADDRESS") | crontab -
+}
+
+# PARSE THE SSH LOG FILE
 function sshMonitor()
 {	
 	for LINE in `grep -E "$@" $LOG_LOC`
@@ -69,14 +79,14 @@ function main()
 	fi
 
 	# Check if file can be read
-	if [ ! -r $LOG_LOG]
+	if [ ! -r $LOG_LOG ]
 	then
 		echo "$LOGLOC: cannot read file"
 		return 2
 	fi
 
 	# Determine type of service
-	if [[ $SERVICE="ssh" ]]
+	if [ "$SERVICE" == "ssh" ]
 	then
 		sshMonitor $SSH
 	fi
