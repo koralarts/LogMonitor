@@ -1,20 +1,20 @@
-#############################################
+##############################################
 # LOG MONITORING
 #
 # Authors:
 #	Karl Castillo
 #	Daniel Khatkar
-#####################################
-#########
+##############################################
 
 ##############################################
 # USER VARIABLES
 ##############################################
 BLOCK_TRIES="3"			# How many tries before blocking
-BLOCK_DELAY="10"		# The delay in seconds
+BLOCK_DELAY="2"			# The delay in seconds to determine blocking
 BLOCK_TIL="1d"			# The amount of time to block the IP
 OS="ubuntu"			# The current OS
-SERVICE="ssh"			# Service to be checked
+SERVICE="ssh"			# Port/Service to be checked
+PROTOCOL="tcp"			# Protocol the service will be on
 LOG_LOC="/var/log/auth.log"	# The location of the log file
 
 ##############################################
@@ -22,18 +22,23 @@ LOG_LOC="/var/log/auth.log"	# The location of the log file
 ##############################################
 
 # SERVICE LOG REGEXP
-SSH="sshd\[[0-9]+\]: Failed password"
+SSH=$OS" sshd\[[0-9]+\]: Failed password"
 	
-#NORMAL VARIABLES
+# NORMAL VARIABLES
 TRIES=0
 IFS=$'\n'
 
 #############################################
 # HELPER FUNCTIONS
 #############################################
+function blockIP()
+{
+	iptables -A INPUT -s $@ -p $PROTOCOL --dport $SERVICE -j DROP
+}
+
 function sshMonitor()
 {	
-	for LINE in `grep -E "$PATTERN" $LOG_LOC`
+	for LINE in `grep -E "$TIME_RANGE $@" $LOG_LOC`
 	do
 		eval `echo $LINE | awk '
 				BEGIN {
@@ -51,26 +56,36 @@ function sshMonitor()
 		echo "IP_ADDRESS = $IP_ADDRESS"
 		echo "TIMESTAMP = $TIMESTAMP"
 		echo "============================"
+
+		
+
 	done
 }
 
-# Check if file exists
-if [ ! -f $LOG_LOC ]
-then
-	echo "$LOG_LOC: does not exist"
-	return 1
-fi
+function main()
+{
+	# Check if file exists
+	if [ ! -f $LOG_LOC ]
+	then
+		echo "$LOG_LOC: does not exist"
+		return 1
+	fi
 
-# Check if file can be read
-if [ ! -r $LOG_LOG]
-then
-	echo "$LOGLOC: cannot read file"
-	return 2
-fi
+	# Check if file can be read
+	if [ ! -r $LOG_LOG]
+	then
+		echo "$LOGLOC: cannot read file"
+		return 2
+	fi
 
-# Determine type of service
-if [[ $SERVICE="ssh" ]]
-then
-	PATTERN=$SSH
-	sshMonitor
-fi
+	# Determine type of service
+	if [[ $SERVICE="ssh" ]]
+	then
+		sshMonitor $SSH
+	fi
+}
+
+#############################################
+# Start Main
+#############################################
+main
