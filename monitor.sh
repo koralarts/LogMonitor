@@ -38,7 +38,7 @@ function blockIP()
 
 function sshMonitor()
 {	
-	for LINE in `grep -E "$TIME_RANGE $@" $LOG_LOC`
+	for LINE in `grep -E "$@" $LOG_LOC`
 	do
 		eval `echo $LINE | awk '
 				BEGIN {
@@ -56,9 +56,6 @@ function sshMonitor()
 		echo "IP_ADDRESS = $IP_ADDRESS"
 		echo "TIMESTAMP = $TIMESTAMP"
 		echo "============================"
-
-		
-
 	done
 }
 
