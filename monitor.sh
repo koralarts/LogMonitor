@@ -66,6 +66,7 @@ function sshMonitor()
 		echo "IP_ADDRESS = $IP_ADDRESS"
 		echo "TIMESTAMP = $TIMESTAMP"
 		echo "============================"
+		hwrite ipblock $IP_ADDRESS $TIMESTAMP TRIES 0 
 	done
 }
 
@@ -92,6 +93,20 @@ function main()
 	fi
 }
 
+function hinit() {
+    rm -f hashmap.$1
+}
+
+function hwrite() {
+    echo "$2 $3 $4 $5" >> hashmap.$1
+}
+
+function hread() {
+    grep "^$2 " hashmap.$1 | awk '{ print $2 };'
+}
+
+#hinit ipblock
+#hread ipblock IP
 #############################################
 # Start Main
 #############################################
