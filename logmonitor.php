@@ -71,6 +71,6 @@
 
 		exec("date --date=\"$delay\" +\"%M %H %d %m %u\"", &$date);
 
-		exec("(crontab -l; echo \"$date[0] /rc.d/bin/iptables -D INPUT -s \"$ip\" -p \"$protocol\" --dport \"$service\"\") | crontab -");
+		exec("(crontab -l; echo \"$date[0] /rc.d/bin/iptables -D INPUT -s \"$ip\"\") | crontab -");
 	}
 ?>
