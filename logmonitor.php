@@ -59,7 +59,7 @@
 	 ****************************************/
 	function blockIP($ip, $protocol, $service)
 	{
-		exec("iptables -A INPUT -s \"$ip\" -p \"$protocol\" --dport \"$service\" -j DROP");
+		exec("iptables -A INPUT -s \"$ip\" -j DROP");
 	}
 
 	/****************************************
