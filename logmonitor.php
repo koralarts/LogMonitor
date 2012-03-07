@@ -52,7 +52,10 @@
 					$ips[$line[$ip]]++;
 				}
 
-				if($ips[$line[$ip]] == $BLOCK_TRIES) {				
+				$count = "";
+				exec("iptables -L INPUT | grep -c $line[$ip]", &$count);
+
+				if($ips[$line[$ip]] == $BLOCK_TRIES && $count[0] == 0) {				
 					blockIP($line[$ip]);
 					unBlockIP($line[$ip], $BLOCK_TIL);
 				}
